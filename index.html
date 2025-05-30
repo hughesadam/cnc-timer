@@ -119,44 +119,61 @@
   }
 
   function exportTimer() {
-    const clone = document.documentElement.cloneNode(true);
+  const clone = document.documentElement.cloneNode(true);
 
-    // Get current computed styles
-    const computed = getComputedStyle(circle);
-    const stroke = computed.stroke;
-    const strokeWidth = computed.strokeWidth;
-    const dasharray = computed.strokeDasharray;
-    const dashoffset = computed.strokeDashoffset;
+  // Get current computed styles
+  const computed = getComputedStyle(circle);
+  const stroke = computed.stroke;
+  const strokeWidth = computed.strokeWidth;
+  const dasharray = computed.strokeDasharray;
+  const dashoffset = computed.strokeDashoffset;
 
-    const cloneCircle = clone.querySelector('.circle');
-    if (cloneCircle) {
-      cloneCircle.removeAttribute('class'); // Remove class to avoid external CSS override
-      cloneCircle.setAttribute('stroke', stroke);
-      cloneCircle.setAttribute('stroke-width', strokeWidth);
-      cloneCircle.setAttribute('stroke-dasharray', dasharray);
-      cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
-      cloneCircle.setAttribute('fill', 'none');
-    }
-
-    const cloneTimer = clone.querySelector('#timer');
-    if (cloneTimer) {
-      cloneTimer.textContent = timerDisplay.textContent;
-    }
-
-    // Optional cleanup
-    clone.querySelectorAll('script').forEach(s => s.remove());
-
-    const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
-    const blob = new Blob([finalHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cnc-timer-${Date.now()}.html`;
-    a.click();
-
-    URL.revokeObjectURL(url);
+  const cloneCircle = clone.querySelector('.circle');
+  if (cloneCircle) {
+    cloneCircle.removeAttribute('class');
+    cloneCircle.setAttribute('stroke', stroke);
+    cloneCircle.setAttribute('stroke-width', strokeWidth);
+    cloneCircle.setAttribute('stroke-dasharray', dasharray);
+    cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
+    cloneCircle.setAttribute('fill', 'none');
   }
+
+  // ✅ Update input values in the cloned DOM
+  const originalTotalInput = document.getElementById('totalTimeInput');
+  const originalThresholdInput = document.getElementById('thresholdInput');
+
+  const cloneTotalInput = clone.getElementById('totalTimeInput');
+  const cloneThresholdInput = clone.getElementById('thresholdInput');
+
+  if (cloneTotalInput) {
+    cloneTotalInput.setAttribute('value', originalTotalInput.value);
+  }
+
+  if (cloneThresholdInput) {
+    cloneThresholdInput.setAttribute('value', originalThresholdInput.value);
+  }
+
+  // ✅ Update timer display
+  const cloneTimer = clone.querySelector('#timer');
+  if (cloneTimer) {
+    cloneTimer.textContent = timerDisplay.textContent;
+  }
+
+  // ✅ Remove scripts to make export static
+  clone.querySelectorAll('script').forEach(s => s.remove());
+
+  const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const blob = new Blob([finalHtml], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cnc-timer-${Date.now()}.html`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+  
 </script>
 
 </body>
