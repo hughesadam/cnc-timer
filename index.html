@@ -121,7 +121,23 @@
   function exportTimer() {
   const clone = document.documentElement.cloneNode(true);
 
-  // Get current computed styles
+  // Fix inputs — use querySelector instead of getElementById on the clone
+  const totalTimeVal = document.getElementById('totalTimeInput').value;
+  const thresholdVal = document.getElementById('thresholdInput').value;
+
+  const cloneTotalInput = clone.querySelector('#totalTimeInput');
+  const cloneThresholdInput = clone.querySelector('#thresholdInput');
+
+  if (cloneTotalInput) cloneTotalInput.setAttribute('value', totalTimeVal);
+  if (cloneThresholdInput) cloneThresholdInput.setAttribute('value', thresholdVal);
+
+  // Update timer text
+  const cloneTimer = clone.querySelector('#timer');
+  if (cloneTimer) {
+    cloneTimer.textContent = timerDisplay.textContent;
+  }
+
+  // Inline SVG style
   const computed = getComputedStyle(circle);
   const stroke = computed.stroke;
   const strokeWidth = computed.strokeWidth;
@@ -138,29 +154,15 @@
     cloneCircle.setAttribute('fill', 'none');
   }
 
-  // ✅ Copy input values into cloned inputs
-  const originalTotalTime = document.getElementById('totalTimeInput').value;
-  const originalThreshold = document.getElementById('thresholdInput').value;
-
-  const cloneTotalTime = clone.getElementById('totalTimeInput');
-  const cloneThreshold = clone.getElementById('thresholdInput');
-
-  if (cloneTotalTime) cloneTotalTime.setAttribute('value', originalTotalTime);
-  if (cloneThreshold) cloneThreshold.setAttribute('value', originalThreshold);
-
-  // Copy timer text
-  const cloneTimer = clone.querySelector('#timer');
-  if (cloneTimer) {
-    cloneTimer.textContent = timerDisplay.textContent;
-  }
-
-  // Remove script tags for static export
+  // Remove all scripts so it's static
   clone.querySelectorAll('script').forEach(s => s.remove());
 
+  // Serialize HTML
   const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
   const blob = new Blob([finalHtml], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
+  // Create a temporary anchor to trigger the download
   const a = document.createElement('a');
   a.href = url;
   a.download = `cnc-timer-${Date.now()}.html`;
@@ -168,8 +170,10 @@
   a.click();
   document.body.removeChild(a);
 
-  URL.revokeObjectURL(url);
+  // Revoke the blob URL
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
 </script>
 
 </body>
