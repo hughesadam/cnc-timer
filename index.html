@@ -149,37 +149,29 @@
   function exportTimer() {
   const clone = document.documentElement.cloneNode(true);
 
-  // Get current styles from the live circle element
-  const currentStroke = getComputedStyle(circle).stroke;
-  const currentOffset = getComputedStyle(circle).strokeDashoffset;
-  const currentDasharray = getComputedStyle(circle).strokeDasharray;
+  // Get live circle styles
+  const currentStroke = circle.style.stroke;
+  const currentOffset = circle.style.strokeDashoffset;
+  const currentDasharray = circle.style.strokeDasharray;
 
-  // Get the clone's circle and inline the computed styles
+  // Inject directly into SVG element attributes
   const cloneCircle = clone.querySelector('.circle');
   if (cloneCircle) {
-    cloneCircle.setAttribute(
-      'style',
-      `
-        stroke: ${currentStroke};
-        stroke-dashoffset: ${currentOffset};
-        stroke-dasharray: ${currentDasharray};
-        stroke-width: 20;
-        fill: none;
-        transition: none;
-      `.trim()
-    );
+    cloneCircle.setAttribute('stroke', currentStroke || 'green');
+    cloneCircle.setAttribute('stroke-dashoffset', currentOffset || '0');
+    cloneCircle.setAttribute('stroke-dasharray', currentDasharray || `${circumference}`);
+    cloneCircle.setAttribute('stroke-width', '20');
+    cloneCircle.setAttribute('fill', 'none');
   }
 
-  // Copy the current timer display
+  // Inject the current timer display
   const cloneTimer = clone.querySelector('#timer');
   if (cloneTimer) {
     cloneTimer.textContent = timerDisplay.textContent;
   }
 
-  // Final HTML string
+  // Serialize and download
   const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
-
-  // Create a Blob and trigger the download
   const blob = new Blob([finalHtml], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
@@ -190,6 +182,7 @@
 
   URL.revokeObjectURL(url);
 }
+
 
 
 </script>
