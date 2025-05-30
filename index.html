@@ -70,8 +70,8 @@
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
 
-  circle.style.strokeDasharray = ${circumference};
-  circle.style.strokeDashoffset = ${circumference};
+  circle.style.strokeDasharray = `${circumference}`;
+  circle.style.strokeDashoffset = `${circumference}`;
   circle.style.stroke = 'green';
 
   let timerInterval;
@@ -92,7 +92,6 @@
       if (timeLeft <= warningThreshold) {
         circle.style.stroke = 'yellow';
 
-        // Play sound alert exactly once
         if (timeLeft === warningThreshold) {
           document.getElementById('alertSound').play();
         }
@@ -102,7 +101,7 @@
 
       const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
       const seconds = String(timeLeft % 60).padStart(2, '0');
-      timerDisplay.textContent = ${minutes}:${seconds};
+      timerDisplay.textContent = `${minutes}:${seconds}`;
 
       if (timeLeft > 0) {
         timeLeft--;
@@ -128,9 +127,10 @@
     const dasharray = computed.strokeDasharray;
     const dashoffset = computed.strokeDashoffset;
 
+    // Apply stroke properties inline
     const cloneCircle = clone.querySelector('.circle');
     if (cloneCircle) {
-      cloneCircle.removeAttribute('class'); // Remove class to avoid external CSS override
+      cloneCircle.removeAttribute('class');
       cloneCircle.setAttribute('stroke', stroke);
       cloneCircle.setAttribute('stroke-width', strokeWidth);
       cloneCircle.setAttribute('stroke-dasharray', dasharray);
@@ -138,21 +138,33 @@
       cloneCircle.setAttribute('fill', 'none');
     }
 
+    // Update input values in export
+    const totalTimeVal = document.getElementById('totalTimeInput').value;
+    const thresholdVal = document.getElementById('thresholdInput').value;
+
+    const cloneTotalInput = clone.getElementById('totalTimeInput');
+    const cloneThresholdInput = clone.getElementById('thresholdInput');
+
+    if (cloneTotalInput) cloneTotalInput.setAttribute('value', totalTimeVal);
+    if (cloneThresholdInput) cloneThresholdInput.setAttribute('value', thresholdVal);
+
+    // Update timer display
     const cloneTimer = clone.querySelector('#timer');
     if (cloneTimer) {
       cloneTimer.textContent = timerDisplay.textContent;
     }
 
-    // Optional cleanup
+    // Remove scripts (so export is static)
     clone.querySelectorAll('script').forEach(s => s.remove());
 
+    // Download as file
     const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
     const blob = new Blob([finalHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = cnc-timer-${Date.now()}.html;
+    a.download = `cnc-timer-${Date.now()}.html`;
     a.click();
 
     URL.revokeObjectURL(url);
