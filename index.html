@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CNC Mills Timer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+
+    svg {
+      transform: rotate(-90deg);
+      margin-top: 20px;
+    }
+
+    .circle-bg {
+      stroke: #eee;
+    }
+
+    .circle {
+      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    }
+
+    input {
+      width: 80px;
+      padding: 5px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      margin-right: 5px;
+    }
+
+    #timer {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>CNC Mills Timer</h1>
+
+<div>
+  <label>Timer Duration (sec): 
+    <input type="number" id="totalTimeInput" value="60" min="1">
+  </label>
+  <label>Alert Duration: 
+    <input type="number" id="thresholdInput" value="20" min="0">
+  </label>
+  <br>
+  <button onclick="startTimer()">Start Timer</button>
+  <button onclick="resetTimer()">Reset Timer</button>
+  <button onclick="exportTimer()">Export Timer HTML</button>
+</div>
+
+<svg width="200" height="200">
+  <circle r="90" cx="100" cy="100" stroke-width="20" fill="none" class="circle-bg" />
+  <circle r="90" cx="100" cy="100" stroke-width="20" fill="none" class="circle" />
+</svg>
+
+<div id="timer">--:--</div>
+
+<!-- Add a hidden audio element -->
+<audio id="alertSound">
+  <source src="https://www.soundjay.com/buttons/beep-07.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<script>
+  const circle = document.querySelector('.circle');
+  const timerDisplay = document.getElementById('timer');
+  const totalInput = document.getElementById('totalTimeInput');
+  const thresholdInput = document.getElementById('thresholdInput');
+  const alertSound = document.getElementById('alertSound');
+
+  const radius = 90;
+  const circumference = 2 * Math.PI * radius;
+
+  circle.style.strokeDasharray = `${circumference}`;
+  circle.style.strokeDashoffset = `${circumference}`;
+  circle.style.stroke = 'green';
+
+  let timerInterval;
+  let alertPlayed = false;
+
+  function setInputsDisabled(disabled) {
+    totalInput.disabled = disabled;
+    thresholdInput.disabled = disabled;
+  }
+
+  function startTimer() {
+    clearTimeout(timerInterval);
+    alertPlayed = false;
+
+    const totalSeconds = Math.max(parseInt(totalInput.value, 10) || 0, 1);
+    const warningThreshold = Math.max(parseInt(thresholdInput.value, 10) || 0, 0);
+
+    let timeLeft = totalSeconds;
+    setInputsDisabled(true);
+
+    function updateTimer() {
+      const percent = timeLeft / totalSeconds;
+      const offset = circumference * (1 - percent);
+      circle.style.strokeDashoffset = offset;
+
+      if (timeLeft <= warningThreshold) {
+        circle.style.stroke = 'yellow';
+        if (!alertPlayed) {
+          alertSound.play();
+          alertPlayed = true;
+        }
+      } else {
+        circle.style.stroke = 'green';
+      }
+
+      const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+      const seconds = String(timeLeft % 60).padStart(2, '0');
+      timerDisplay.textContent = `${minutes}:${seconds}`;
+
+      if (timeLeft > 0) {
+        timeLeft--;
+        timerInterval = setTimeout(updateTimer, 1000);
+      } else {
+        circle.style.stroke = 'red';
+        timerDisplay.textContent = 'Time\'s up!';
+        setInputsDisabled(false);
+      }
+    }
+
+    circle.style.strokeDashoffset = circumference;
+    circle.style.stroke = 'green';
+    updateTimer();
+  }
+
+  function resetTimer() {
+    clearTimeout(timerInterval);
+    circle.style.strokeDashoffset = circumference;
+    circle.style.stroke = 'green';
+    timerDisplay.textContent = '--:--';
+    setInputsDisabled(false);
+    alertPlayed = false;
+  }
+
+  function exportTimer() {
+    const htmlContent = document.documentElement.outerHTML;
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cnc-timer-${Date.now()}.html`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
