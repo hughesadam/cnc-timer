@@ -45,8 +45,8 @@
 <h1>CNC Mills Timer</h1>
 
 <div>
-  <label>Timer Duration (sec): <input type="number" id="totalTimeInput" value="60"></label>
-  <label>Alert Duration: <input type="number" id="thresholdInput" value="20"></label>
+  <label>Timer Duration (sec): <input type="number" id="totalTimeInput" value="" min="1"></label>
+  <label>Alert Duration: <input type="number" id="thresholdInput" value="" min="0"></label>
   <br>
   <button onclick="startTimer()">Start Timer</button>
   <button onclick="exportTimer()">Export Timer</button>
@@ -70,8 +70,8 @@
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
 
-  circle.style.strokeDasharray = ${circumference};
-  circle.style.strokeDashoffset = ${circumference};
+  circle.style.strokeDasharray = `${circumference}`;
+  circle.style.strokeDashoffset = `${circumference}`;
   circle.style.stroke = 'green';
 
   let timerInterval;
@@ -102,7 +102,7 @@
 
       const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
       const seconds = String(timeLeft % 60).padStart(2, '0');
-      timerDisplay.textContent = ${minutes}:${seconds};
+      timerDisplay.textContent = `${minutes}:${seconds}`;
 
       if (timeLeft > 0) {
         timeLeft--;
@@ -119,59 +119,44 @@
   }
 
   function exportTimer() {
-  const clone = document.documentElement.cloneNode(true);
+    const clone = document.documentElement.cloneNode(true);
 
-  // Get current computed styles
-  const computed = getComputedStyle(circle);
-  const stroke = computed.stroke;
-  const strokeWidth = computed.strokeWidth;
-  const dasharray = computed.strokeDasharray;
-  const dashoffset = computed.strokeDashoffset;
+    // Get current computed styles
+    const computed = getComputedStyle(circle);
+    const stroke = computed.stroke;
+    const strokeWidth = computed.strokeWidth;
+    const dasharray = computed.strokeDasharray;
+    const dashoffset = computed.strokeDashoffset;
 
-  // Fix SVG circle appearance
-  const cloneCircle = clone.querySelector('.circle');
-  if (cloneCircle) {
-    cloneCircle.removeAttribute('class');
-    cloneCircle.setAttribute('stroke', stroke);
-    cloneCircle.setAttribute('stroke-width', strokeWidth);
-    cloneCircle.setAttribute('stroke-dasharray', dasharray);
-    cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
-    cloneCircle.setAttribute('fill', 'none');
+    const cloneCircle = clone.querySelector('.circle');
+    if (cloneCircle) {
+      cloneCircle.removeAttribute('class'); // Remove class to avoid external CSS override
+      cloneCircle.setAttribute('stroke', stroke);
+      cloneCircle.setAttribute('stroke-width', strokeWidth);
+      cloneCircle.setAttribute('stroke-dasharray', dasharray);
+      cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
+      cloneCircle.setAttribute('fill', 'none');
+    }
+
+    const cloneTimer = clone.querySelector('#timer');
+    if (cloneTimer) {
+      cloneTimer.textContent = timerDisplay.textContent;
+    }
+
+    // Optional cleanup
+    clone.querySelectorAll('script').forEach(s => s.remove());
+
+    const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+    const blob = new Blob([finalHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cnc-timer-${Date.now()}.html`;
+    a.click();
+
+    URL.revokeObjectURL(url);
   }
-
-  // Set live timer text
-  const cloneTimer = clone.querySelector('#timer');
-  if (cloneTimer) {
-    cloneTimer.textContent = timerDisplay.textContent;
-  }
-
-  // 🛠️ Set input values based on user input
-  const totalTimeVal = document.getElementById('totalTimeInput').value;
-  const thresholdVal = document.getElementById('thresholdInput').value;
-
-  const cloneTotalInput = clone.getElementById('totalTimeInput');
-  const cloneThresholdInput = clone.getElementById('thresholdInput');
-
-  if (cloneTotalInput) cloneTotalInput.setAttribute('value', totalTimeVal);
-  if (cloneThresholdInput) cloneThresholdInput.setAttribute('value', thresholdVal);
-
-  // Clean up scripts for static export
-  clone.querySelectorAll('script').forEach(s => s.remove());
-
-  // Final HTML and download
-  const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
-  const blob = new Blob([finalHtml], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cnc-timer-${Date.now()}.html`;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-  
 </script>
 
 </body>
