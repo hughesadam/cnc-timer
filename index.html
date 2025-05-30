@@ -147,33 +147,42 @@
   }
 
   function exportTimer() {
-  // Clone the entire document
   const clone = document.documentElement.cloneNode(true);
 
-  // Get current values
-  const currentStroke = circle.style.stroke;
-  const currentOffset = circle.style.strokeDashoffset;
+  // Get current styles from the live circle element
+  const currentStroke = getComputedStyle(circle).stroke;
+  const currentOffset = getComputedStyle(circle).strokeDashoffset;
+  const currentDasharray = getComputedStyle(circle).strokeDasharray;
 
-  // Inject current values into the cloned SVG circle
+  // Get the clone's circle and inline the computed styles
   const cloneCircle = clone.querySelector('.circle');
   if (cloneCircle) {
-    cloneCircle.setAttribute('style', `stroke: ${currentStroke}; stroke-dashoffset: ${currentOffset}; stroke-dasharray: ${circumference}; transition: stroke-dashoffset 1s linear, stroke 0.3s;`);
+    cloneCircle.setAttribute(
+      'style',
+      `
+        stroke: ${currentStroke};
+        stroke-dashoffset: ${currentOffset};
+        stroke-dasharray: ${currentDasharray};
+        stroke-width: 20;
+        fill: none;
+        transition: none;
+      `.trim()
+    );
   }
 
-  // Update timer display
+  // Copy the current timer display
   const cloneTimer = clone.querySelector('#timer');
   if (cloneTimer) {
     cloneTimer.textContent = timerDisplay.textContent;
   }
 
-  // Create final HTML string
+  // Final HTML string
   const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
 
-  // Create downloadable blob
+  // Create a Blob and trigger the download
   const blob = new Blob([finalHtml], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
-  // Create and trigger download
   const a = document.createElement('a');
   a.href = url;
   a.download = `cnc-timer-${Date.now()}.html`;
@@ -181,6 +190,7 @@
 
   URL.revokeObjectURL(url);
 }
+
 
 </script>
 
