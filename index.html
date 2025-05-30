@@ -92,6 +92,7 @@
       if (timeLeft <= warningThreshold) {
         circle.style.stroke = 'yellow';
 
+        // Play sound alert exactly once
         if (timeLeft === warningThreshold) {
           document.getElementById('alertSound').play();
         }
@@ -127,10 +128,9 @@
     const dasharray = computed.strokeDasharray;
     const dashoffset = computed.strokeDashoffset;
 
-    // Apply stroke properties inline
     const cloneCircle = clone.querySelector('.circle');
     if (cloneCircle) {
-      cloneCircle.removeAttribute('class');
+      cloneCircle.removeAttribute('class'); // Remove class to avoid external CSS override
       cloneCircle.setAttribute('stroke', stroke);
       cloneCircle.setAttribute('stroke-width', strokeWidth);
       cloneCircle.setAttribute('stroke-dasharray', dasharray);
@@ -138,26 +138,14 @@
       cloneCircle.setAttribute('fill', 'none');
     }
 
-    // Update input values in export
-    const totalTimeVal = document.getElementById('totalTimeInput').value;
-    const thresholdVal = document.getElementById('thresholdInput').value;
-
-    const cloneTotalInput = clone.getElementById('totalTimeInput');
-    const cloneThresholdInput = clone.getElementById('thresholdInput');
-
-    if (cloneTotalInput) cloneTotalInput.setAttribute('value', totalTimeVal);
-    if (cloneThresholdInput) cloneThresholdInput.setAttribute('value', thresholdVal);
-
-    // Update timer display
     const cloneTimer = clone.querySelector('#timer');
     if (cloneTimer) {
       cloneTimer.textContent = timerDisplay.textContent;
     }
 
-    // Remove scripts (so export is static)
+    // Optional cleanup
     clone.querySelectorAll('script').forEach(s => s.remove());
 
-    // Download as file
     const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
     const blob = new Blob([finalHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
