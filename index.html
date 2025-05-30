@@ -20,7 +20,7 @@
     }
 
     .circle {
-      transition: stroke-dashoffset 1s linear, stroke 0.3s;
+      transition: stroke 0.3s;
     }
 
     input {
@@ -31,8 +31,7 @@
 
     button {
       padding: 8px 16px;
-      margin-top: 10px;
-      margin-right: 5px;
+      margin: 10px;
     }
 
     #timer {
@@ -46,16 +45,11 @@
 <h1>CNC Mills Timer</h1>
 
 <div>
-  <label>Timer Duration (sec): 
-    <input type="number" id="totalTimeInput" value="60" min="1">
-  </label>
-  <label>Alert Duration: 
-    <input type="number" id="thresholdInput" value="20" min="0">
-  </label>
+  <label>Timer Duration (sec): <input type="number" id="totalTimeInput" value="60"></label>
+  <label>Alert Duration: <input type="number" id="thresholdInput" value="20"></label>
   <br>
   <button onclick="startTimer()">Start Timer</button>
-  <button onclick="resetTimer()">Reset Timer</button>
-  <button onclick="exportTimer()">Export Timer HTML</button>
+  <button onclick="exportTimer()">Export Timer</button>
 </div>
 
 <svg width="200" height="200">
@@ -65,19 +59,14 @@
 
 <div id="timer">--:--</div>
 
-<!-- Add a hidden audio element -->
-<audio id="alertSound">
-  <source src="https://www.soundjay.com/buttons/beep-07.mp3" type="audio/mpeg">
+<audio id="alertSound" preload="auto">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
   Your browser does not support the audio element.
 </audio>
 
 <script>
   const circle = document.querySelector('.circle');
   const timerDisplay = document.getElementById('timer');
-  const totalInput = document.getElementById('totalTimeInput');
-  const thresholdInput = document.getElementById('thresholdInput');
-  const alertSound = document.getElementById('alertSound');
-
   const radius = 90;
   const circumference = 2 * Math.PI * radius;
 
@@ -86,22 +75,14 @@
   circle.style.stroke = 'green';
 
   let timerInterval;
-  let alertPlayed = false;
-
-  function setInputsDisabled(disabled) {
-    totalInput.disabled = disabled;
-    thresholdInput.disabled = disabled;
-  }
 
   function startTimer() {
     clearTimeout(timerInterval);
-    alertPlayed = false;
 
-    const totalSeconds = Math.max(parseInt(totalInput.value, 10) || 0, 1);
-    const warningThreshold = Math.max(parseInt(thresholdInput.value, 10) || 0, 0);
+    const totalSeconds = parseInt(document.getElementById('totalTimeInput').value, 10);
+    const warningThreshold = parseInt(document.getElementById('thresholdInput').value, 10);
 
     let timeLeft = totalSeconds;
-    setInputsDisabled(true);
 
     function updateTimer() {
       const percent = timeLeft / totalSeconds;
@@ -110,9 +91,10 @@
 
       if (timeLeft <= warningThreshold) {
         circle.style.stroke = 'yellow';
-        if (!alertPlayed) {
-          alertSound.play();
-          alertPlayed = true;
+
+        // Play sound alert exactly once
+        if (timeLeft === warningThreshold) {
+          document.getElementById('alertSound').play();
         }
       } else {
         circle.style.stroke = 'green';
@@ -127,8 +109,7 @@
         timerInterval = setTimeout(updateTimer, 1000);
       } else {
         circle.style.stroke = 'red';
-        timerDisplay.textContent = 'Time\'s up!';
-        setInputsDisabled(false);
+        timerDisplay.textContent = "Time's up!";
       }
     }
 
@@ -137,63 +118,45 @@
     updateTimer();
   }
 
-  function resetTimer() {
-    clearTimeout(timerInterval);
-    circle.style.strokeDashoffset = circumference;
-    circle.style.stroke = 'green';
-    timerDisplay.textContent = '--:--';
-    setInputsDisabled(false);
-    alertPlayed = false;
-  }
-
   function exportTimer() {
-  const clone = document.documentElement.cloneNode(true);
+    const clone = document.documentElement.cloneNode(true);
 
-  // Get live values
-  const computed = getComputedStyle(circle);
-  const stroke = computed.stroke;
-  const strokeWidth = computed.strokeWidth;
-  const dasharray = computed.strokeDasharray;
-  const dashoffset = computed.strokeDashoffset;
+    // Get current computed styles
+    const computed = getComputedStyle(circle);
+    const stroke = computed.stroke;
+    const strokeWidth = computed.strokeWidth;
+    const dasharray = computed.strokeDasharray;
+    const dashoffset = computed.strokeDashoffset;
 
-  // Clone the SVG circle and apply values directly
-  const cloneCircle = clone.querySelector('.circle');
-  if (cloneCircle) {
-    cloneCircle.removeAttribute('class'); // Remove class to prevent overrides
-    cloneCircle.setAttribute('stroke', stroke);
-    cloneCircle.setAttribute('stroke-width', strokeWidth);
-    cloneCircle.setAttribute('stroke-dasharray', dasharray);
-    cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
-    cloneCircle.setAttribute('fill', 'none');
+    const cloneCircle = clone.querySelector('.circle');
+    if (cloneCircle) {
+      cloneCircle.removeAttribute('class'); // Remove class to avoid external CSS override
+      cloneCircle.setAttribute('stroke', stroke);
+      cloneCircle.setAttribute('stroke-width', strokeWidth);
+      cloneCircle.setAttribute('stroke-dasharray', dasharray);
+      cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
+      cloneCircle.setAttribute('fill', 'none');
+    }
+
+    const cloneTimer = clone.querySelector('#timer');
+    if (cloneTimer) {
+      cloneTimer.textContent = timerDisplay.textContent;
+    }
+
+    // Optional cleanup
+    clone.querySelectorAll('script').forEach(s => s.remove());
+
+    const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+    const blob = new Blob([finalHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cnc-timer-${Date.now()}.html`;
+    a.click();
+
+    URL.revokeObjectURL(url);
   }
-
-  // Ensure timer text is up to date
-  const cloneTimer = clone.querySelector('#timer');
-  if (cloneTimer) {
-    cloneTimer.textContent = timerDisplay.textContent;
-  }
-
-  // Optional: Remove JavaScript from export
-  const cloneScriptTags = clone.querySelectorAll('script');
-  cloneScriptTags.forEach(script => script.remove());
-
-  // Optional: Remove buttons/inputs from export
-  // clone.querySelectorAll('button, input').forEach(el => el.remove());
-
-  // Serialize and download
-  const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
-  const blob = new Blob([finalHtml], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `cnc-timer-${Date.now()}.html`;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-
 </script>
 
 </body>
