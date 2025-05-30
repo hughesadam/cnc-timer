@@ -45,8 +45,8 @@
 <h1>CNC Mills Timer</h1>
 
 <div>
-  <label>Timer Duration (sec): <input type="number" id="totalTimeInput" value="60"></label>
-  <label>Alert Duration: <input type="number" id="thresholdInput" value="20"></label>
+  <label>Timer Duration (sec): <input type="number" id="totalTimeInput" value="" min="1"></label>
+  <label>Alert Duration: <input type="number" id="thresholdInput" value="" min="0"></label>
   <br>
   <button onclick="startTimer()">Start Timer</button>
   <button onclick="exportTimer()">Export Timer</button>
