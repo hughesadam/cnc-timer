@@ -149,26 +149,36 @@
   function exportTimer() {
   const clone = document.documentElement.cloneNode(true);
 
-  // Get live circle styles
-  const currentStroke = circle.style.stroke;
-  const currentOffset = circle.style.strokeDashoffset;
-  const currentDasharray = circle.style.strokeDasharray;
+  // Get live values
+  const computed = getComputedStyle(circle);
+  const stroke = computed.stroke;
+  const strokeWidth = computed.strokeWidth;
+  const dasharray = computed.strokeDasharray;
+  const dashoffset = computed.strokeDashoffset;
 
-  // Inject directly into SVG element attributes
+  // Clone the SVG circle and apply values directly
   const cloneCircle = clone.querySelector('.circle');
   if (cloneCircle) {
-    cloneCircle.setAttribute('stroke', currentStroke || 'green');
-    cloneCircle.setAttribute('stroke-dashoffset', currentOffset || '0');
-    cloneCircle.setAttribute('stroke-dasharray', currentDasharray || `${circumference}`);
-    cloneCircle.setAttribute('stroke-width', '20');
+    cloneCircle.removeAttribute('class'); // Remove class to prevent overrides
+    cloneCircle.setAttribute('stroke', stroke);
+    cloneCircle.setAttribute('stroke-width', strokeWidth);
+    cloneCircle.setAttribute('stroke-dasharray', dasharray);
+    cloneCircle.setAttribute('stroke-dashoffset', dashoffset);
     cloneCircle.setAttribute('fill', 'none');
   }
 
-  // Inject the current timer display
+  // Ensure timer text is up to date
   const cloneTimer = clone.querySelector('#timer');
   if (cloneTimer) {
     cloneTimer.textContent = timerDisplay.textContent;
   }
+
+  // Optional: Remove JavaScript from export
+  const cloneScriptTags = clone.querySelectorAll('script');
+  cloneScriptTags.forEach(script => script.remove());
+
+  // Optional: Remove buttons/inputs from export
+  // clone.querySelectorAll('button, input').forEach(el => el.remove());
 
   // Serialize and download
   const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
@@ -182,7 +192,6 @@
 
   URL.revokeObjectURL(url);
 }
-
 
 
 </script>
