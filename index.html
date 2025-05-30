@@ -165,7 +165,9 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = `cnc-timer-${Date.now()}.html`;
+    document.body.appendChild(a); // Needed for some browsers
     a.click();
+    document.body.removeChild(a);
 
     URL.revokeObjectURL(url);
   }
