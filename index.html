@@ -121,7 +121,7 @@
   function exportTimer() {
   const clone = document.documentElement.cloneNode(true);
 
-  // Fix inputs — use querySelector instead of getElementById on the clone
+  // Get and copy input values
   const totalTimeVal = document.getElementById('totalTimeInput').value;
   const thresholdVal = document.getElementById('thresholdInput').value;
 
@@ -131,13 +131,13 @@
   if (cloneTotalInput) cloneTotalInput.setAttribute('value', totalTimeVal);
   if (cloneThresholdInput) cloneThresholdInput.setAttribute('value', thresholdVal);
 
-  // Update timer text
+  // Update timer display
   const cloneTimer = clone.querySelector('#timer');
   if (cloneTimer) {
     cloneTimer.textContent = timerDisplay.textContent;
   }
 
-  // Inline SVG style
+  // Style the SVG circle inline
   const computed = getComputedStyle(circle);
   const stroke = computed.stroke;
   const strokeWidth = computed.strokeWidth;
@@ -154,25 +154,31 @@
     cloneCircle.setAttribute('fill', 'none');
   }
 
-  // Remove all scripts so it's static
+  // Remove scripts for static export
   clone.querySelectorAll('script').forEach(s => s.remove());
 
-  // Serialize HTML
   const finalHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
   const blob = new Blob([finalHtml], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
 
-  // Create a temporary anchor to trigger the download
+  // Create a readable timestamp
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const timestamp = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+
+  const filename = `cnc-timer${timestamp}.html`;
+
+  // Download
   const a = document.createElement('a');
   a.href = url;
-  a.download = `cnc-timer-${Date.now()}.html`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
 
-  // Revoke the blob URL
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
 
 </script>
 
